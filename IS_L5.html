@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<head>
+<title>Diffie-Hellman Key Exchange</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+<h2>Diffie-Hellman Key Exchange</h2>
+<div>
+    <h3>Prime Number and Primitive Root</h3>
+    Prime Number: <input type="number" id="prime"><br><br>
+    Primitive Root: <input type="number" id="primitiveRoot"><br><br>
+</div>
+<div>    
+    <button onclick="validateAndSetup()">Validate</button>
+</div>
+<div id="alice" style="display:none;">
+    <h3>Alice</h3>
+    Private Key: <input type="text" id="alicePrivateKey"><br><br>
+    <button onclick="generatePublicKeyAlice()">Generate Public Key</button>
+    <p>Public Key: <span id="alicePublicKey"></span></p>
+</div>
+<div id="bob" style="display:none;">
+    <h3>Bob</h3>
+    Private Key: <input type="text" id="bobPrivateKey"><br><br>
+    <button onclick="generatePublicKeyBob()">Generate Public Key</button>
+    <p>Public Key: <span id="bobPublicKey"></span></p>
+</div>
+<div>
+    <button onclick="computeSharedSecret()">Compute Shared Secret Key</button>
+</div>
+<div>
+    <h3>Shared Secret Key</h3>
+    <p><span id="sharedSecretKey"></span></p>
+</div>
+
+<script>
+    let prime, primitiveRoot;
+    let alicePrivateKey, bobPrivateKey;
+    let alicePublicKey, bobPublicKey;
+
+    function validateAndSetup() {
+        prime = parseInt(document.getElementById('prime').value);
+        primitiveRoot = parseInt(document.getElementById('primitiveRoot').value);
+
+        if (!isPrime(prime)) {
+            alert("Please enter a prime number.");
+            return;
+        }
+
+        if (!isPrimitiveRoot(primitiveRoot, prime)) {
+            alert("Please enter a primitive root modulo the given prime number.");
+            return;
+        }
+
+        document.getElementById('alice').style.display = "block";
+        document.getElementById('bob').style.display = "block";
+    }
+
+    function isPrime(num) {
+        if (num < 2) return false;
+
+        let sqrtNum = Math.sqrt(num);
+        for (let i = 2; i <= sqrtNum; i++) {
+            if (num % i === 0) return false;
+        }
+        return true;
+    }
+
+    function isPrimitiveRoot(a, p) {
+        if (!isPrime(p)) return false;
+
+        let result = 1;
+        let set = new Set();
+
+        for (let i = 0; i < p - 1; i++) {
+            result = (result * a) % p;
+            if (set.has(result) || result === 0) return false;
+            set.add(result);
+        }
+
+        return true;
+    }
+
+    function generatePublicKeyBob() {
+        bobPrivateKey = parseInt(document.getElementById('bobPrivateKey').value);
+        bobPublicKey = Math.pow(primitiveRoot, bobPrivateKey) % prime;
+        document.getElementById('bobPublicKey').innerText = bobPublicKey;
+    }
+
+    function generatePublicKeyAlice() {
+        alicePrivateKey = parseInt(document.getElementById('alicePrivateKey').value);
+        alicePublicKey = Math.pow(primitiveRoot, alicePrivateKey) % prime;
+        document.getElementById('alicePublicKey').innerText = alicePublicKey;
+    }
+
+    function computeSharedSecret() {
+        const sharedSecretKeyByAlice = Math.pow(bobPublicKey, alicePrivateKey) % prime;
+        const sharedSecretKeyByBob = Math.pow(alicePublicKey, bobPrivateKey) % prime;
+
+        if (sharedSecretKeyByAlice === sharedSecretKeyByBob) {
+            document.getElementById("alicePublicKey").innerText = alicePublicKey;
+            document.getElementById("bobPublicKey").innerText = bobPublicKey;
+            document.getElementById("sharedSecretKey").innerText = sharedSecretKeyByAlice;
+        } else {
+            document.getElementById("alicePublicKey").innerText = "";
+            document.getElementById("bobPublicKey").innerText = "";
+            document.getElementById("sharedSecretKey").innerText = "Error: Shared Secret Key Mismatch!";
+        }
+    }
+</script>
+</body>
+</html>
